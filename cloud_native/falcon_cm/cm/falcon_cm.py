@@ -154,18 +154,19 @@ class FalconCM:
                 except NodeExistsError:
                     self._is_leader = False
             else:
-                retry_num = 30
-                while not self._zk_client.exists(leader_path) and retry_num > 0:
-                    retry_num -= 1
-                    time.sleep(1)
-                self.watch_leader_and_candidates()
-                while not self._zk_client.exists(leader_path):
-                    time.sleep(1)
-                last_leader, _ = self._zk_client.get(last_leader_path)
-                if last_leader == self._host_node_name:
-                    self._is_leader = True
-                else:
-                    self._is_leader = False
+                # retry_num = 30
+                # while not self._zk_client.exists(leader_path) and retry_num > 0:
+                #     retry_num -= 1
+                #     time.sleep(1)
+                # self.watch_leader_and_candidates()
+                # while not self._zk_client.exists(leader_path):
+                #     time.sleep(1)
+                # last_leader, _ = self._zk_client.get(last_leader_path)
+                # if last_leader == self._host_node_name:
+                #     self._is_leader = True
+                # else:
+                #     self._is_leader = False
+                self._is_leader = False
         else:
             if self._zk_client.exists(leader_path):
                 self._is_leader = False
@@ -301,6 +302,7 @@ class FalconCM:
                 self._user_name,
             )
         self._zk_client.create(replica_path, ephemeral=True)
+        self.watch_leader_and_candidates()
 
     def find_node_cluster(self):
         """find the cluster for the node"""
@@ -396,8 +398,8 @@ class FalconCM:
 
         @self._zk_client.DataWatch(leader_path)
         def watch_leader(data, state, event):
-            if state == None and event == None:
-                self.handle_leader_delete_event()
+            # if state == None and event == None:
+            #     self.handle_leader_delete_event()
             if event:
                 if event.type == EventType.DELETED:
                     self.handle_leader_delete_event()
