@@ -154,18 +154,6 @@ class FalconCM:
                 except NodeExistsError:
                     self._is_leader = False
             else:
-                # retry_num = 30
-                # while not self._zk_client.exists(leader_path) and retry_num > 0:
-                #     retry_num -= 1
-                #     time.sleep(1)
-                # self.watch_leader_and_candidates()
-                # while not self._zk_client.exists(leader_path):
-                #     time.sleep(1)
-                # last_leader, _ = self._zk_client.get(last_leader_path)
-                # if last_leader == self._host_node_name:
-                #     self._is_leader = True
-                # else:
-                #     self._is_leader = False
                 self._is_leader = False
         else:
             if self._zk_client.exists(leader_path):
@@ -803,7 +791,8 @@ class FalconCM:
                     self._lost_node_time[name] = self._lost_node_time[name] + 10
                 else:
                     self._lost_node_time[name] = 0
-                if self._lost_node_time[name] > self._wait_replica_time:
+                self.logger.info('lost time is {}'.format(self._lost_node_time[name]))
+                if self._lost_node_time[name] >= self._wait_replica_time:
                     retry_num = 0
             else:
                 if name in self._lost_node_time:
@@ -905,6 +894,7 @@ class FalconCM:
     def watch_need_supplement(self):
         @self._zk_client.ChildrenWatch(self._need_supplement_path)
         def watch_nodes(children):
+            self.logger.info('in need supplement watch')
             self._watch_need_supplement_lock.acquire()
             self._need_supplement_num += 1
             self._watch_need_supplement_lock.release()
@@ -914,6 +904,7 @@ class FalconCM:
 
         @self._zk_client.ChildrenWatch(replica_path)
         def watch_nodes(children):
+            self.logger.info('in watch replicas')
             self._watch_replica_lock.acquire()
             self._replica_change_num += 1
             self._watch_replica_lock.release()
